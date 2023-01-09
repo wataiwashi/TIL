@@ -90,8 +90,8 @@ def plot_y1y2(): # y1, y2プロット用
     ax1.text(0.7, (ytext - ym[0])/(ym[1] - ym[0]) + 0.05, r'$y=%4.1f$'%(ytext), transform = ax1.transAxes) # 図中にtextを入れる
 
     ### 読み込みデータのプロット
-    ax1.plot(x1, y1, lw = lw1, ls = 'solid', marker = 'o', ms = ms1, color = 'C0', 
-            alpha = 0.6,     # 透明度
+    ax1.plot(x1, y1, lw = lw1, ls = 'solid', marker = 'o', ms = ms1*1.2, mew = lw1*2., mfc = 'none', color = 'C0', 
+            alpha = 0.5,     # 透明度
             clip_on = False, # プロット枠外にもプロットする
             zorder = 8,      # zorderが大きいほど前面に表示される
             label = 'Normal font y1') 
