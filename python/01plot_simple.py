@@ -75,10 +75,10 @@ def plot_y1y2(): # y1, y2プロット用
 
     ax1.set_xlabel(lx, labelpad = lpad[0]) # 軸ラベル
     ax1.set_ylabel(ly, labelpad = lpad[1])
-    xm, ym = [0, 10], [-35, 10]
+    xm, ym = [0, 10, 2.5], [-35, 10, 5]
     ax1.set_xlim(xm[0], xm[1]) # 軸の範囲
     ax1.set_ylim(ym[0], ym[1])
-    ax1.set_xticks(np.arange(0, xm[1] + 1.e-3, 2.5)) # xmaxまで2.5刻みの目盛り線
+    ax1.set_xticks( np.arange(xm[0], xm[1] + 1.e-3, xm[2]) ) # xm[0]からxm[1]までxm[2]刻みの目盛り線
     ax1.tick_params(axis='x', pad = tpad[0])
     ax1.tick_params(axis='y', pad = tpad[1])
 
@@ -92,7 +92,7 @@ def plot_y1y2(): # y1, y2プロット用
     ### 読み込みデータのプロット
     ax1.plot(x1, y1, lw = lw1, ls = 'solid', marker = 'o', ms = ms1*1.2, mew = lw1*2., mfc = 'none', color = 'C0', 
             alpha = 0.5,     # 透明度
-            clip_on = False, # プロット枠外にもプロットする
+            clip_on = False, # Falseでプロット枠外にもプロットする
             zorder = 8,      # zorderが大きいほど前面に表示される
             label = 'Normal font y1') 
     ax1.plot(x1, y2, lw = lw1, ls = 'solid', ms = ms1, marker = 's', color = 'C1', alpha = 1, clip_on = False, zorder = 7, label = r'$y_2$')
