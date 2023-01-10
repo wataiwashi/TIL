@@ -5,9 +5,9 @@
 - Using python3 of Anaconda3 is recommended. 
 
 ## [data/](data-l) directry
-There are data files (dat files). 
+There are data files (`dat` files). 
 
 ## [plot/](https://github.com/wataiwashi/TIL/tree/master/python/plot) directry
-There are plot results (pdf files). 
+There are plot results (`pdf` files). 
 
 [data-l]: https://github.com/wataiwashi/TIL/tree/master/python/data
