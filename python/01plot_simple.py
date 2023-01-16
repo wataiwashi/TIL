@@ -8,6 +8,7 @@ import seaborn as sns
 import os
 import sys
 
+fshow = 0 # 結果のポップアップ表示
 ### 入出力の設定
 fsize = 0   # 0：小さいサイズ（論文用）　1：大きいサイズ（プレゼン用）
 ext = 'pdf' # 保存ファイルの拡張子　pdf,svg,pngなど
@@ -18,8 +19,10 @@ datadir = 'data'
 plotdir, datadir, ext = plotdir + '/', datadir + '/', '.' + ext
 dfile   = datadir + 'data1.dat'
 
-if os.path.exists(plotdir) == False or os.path.exists(datadir) == False: # plotdirやdatadirが存在しないときに中止する
-    sys.exit("Error")
+if os.path.exists(plotdir) == False:  # plotdirやdatadirが存在しないときに中止する
+    sys.exit("plotdir error: %s"%plotdir)
+elif os.path.exists(datadir) == False:
+    sys.exit("datadir error: %s"%datadir)
 
 def sns_set(fs, tck_s, alw, ctxt):
     sns.set(
@@ -49,12 +52,14 @@ y3 = np.loadtxt(dfile, usecols = 3, dtype = 'float64')
 ### サイズ、ラベルなどの設定
 lx, ly = r'Distance, $x$', r'$y$' # r''でTeX文字にできる
 if fsize == 0:
+    figs = 1.
     fs1, lw1, ms1 = 1., 1., 6.
     tck_s1, alw = 3, 0.625
     ctxt1 = 'paper'
     lpad = [5, 5] # 軸とラベルの間隔
     tpad = [3, 5] # 軸と数値の間隔
 else:
+    figs = 2.
     fs1, lw1, ms1 = 1.5, 3., 14.
     tck_s1, alw = 7, 1.25
     ctxt1, ext = 'talk', '_talk' + ext
@@ -63,10 +68,7 @@ else:
 
 
 def plot_y1y2(): # y1, y2プロット用
-    if fsize == 0:
-        fig = plt.figure(figsize = (3.6, 2.4), dpi = 100, linewidth = 0)
-    else:
-        fig = plt.figure(figsize = (7.2, 4.8), dpi = 100, linewidth = 0)
+    fig = plt.figure(figsize = (3.6*figs, 2.4*figs), dpi = 100, linewidth = 0)
     ax1 = fig.add_subplot(111)
     ax1.spines["top"].set_linewidth(alw)
     ax1.spines["left"].set_linewidth(alw)
@@ -112,4 +114,6 @@ if __name__ == '__main__':
     print("datadir: ", datadir, ", plotdir: ", plotdir, ", ctxt: ", ctxt1)
     sns_set(fs1, tck_s1, alw, ctxt1)
     plot_y1y2()
+    if fshow == 1:
+        plt.show()
     print("end main")
