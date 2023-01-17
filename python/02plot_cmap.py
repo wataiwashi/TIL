@@ -5,6 +5,9 @@ Color map etc. LaTeX font
 import numpy as np
 import math
 import matplotlib.pyplot as plt
+from matplotlib import cm
+from matplotlib.colors import ListedColormap
+from matplotlib.colors import LinearSegmentedColormap
 import seaborn as sns
 import os
 import sys
@@ -62,7 +65,7 @@ def sns_set(fs, tck_s, alw, ctxt):
 x1  = np.loadtxt(dfile, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数int64など
 y1  = np.loadtxt(dfile, usecols = 1, dtype = 'float64')
 cxy = np.loadtxt(dfile, usecols = 2, dtype = 'float64')
-# 2次元形式に変換
+#### 2次元形式に変換
 x1  =  x1.reshape([nxi[1] + 1, -1]) # 読み込んだデータを2次元配列に変換。y, xの要素数。-1で自動
 y1  =  y1.reshape([nxi[1] + 1, -1]) # 読み込んだデータを2次元配列に変換。y, xの要素数。-1で自動
 cxy = cxy.reshape([nxi[1] + 1, -1]) # 読み込んだデータを2次元配列に変換。y, xの要素数。-1で自動
@@ -84,8 +87,34 @@ else:
     lpad = [10, 8]
     tpad = [8, 12]
 
+### 既存のcmap
+cmap1 = 'viridis'
+### cmapの自作
+#### 断続的な変化
+cnmax = 10
+cim = cm.get_cmap('Blues', cnmax) # 'Blues'をcnmax分割したデータを取得
+clist = [cim(0)]
+for i in range(1, cim.N):
+    clist.append(cim(i))
+mycmap1 = ListedColormap(clist)
+#### 不規則に変化させる
+cnmax = 401
+cim = cm.get_cmap('viridis', cnmax) # 'viridis'をcnmax分割したデータを取得
+cnum, tp = [0, 100, 200, 300, cim.N - 1], [50, 150, 250, 350] # cnum使う色の番号、tp色を切り替える場所の指定
+sm = 10 # 変化の滑らかさ（0からcnumの間隔の半分くらいまでの値）
+clist, j = [ cim(cnum[0]) ], 0
+for i in range(1, cim.N):
+    cn0 = 0
+    if j < len(tp):
+        if i >= tp[j] + sm:
+            j = j + 1
+        elif abs( i - tp[j] ) <= sm:
+            cn0 = int( (cnum[j + 1] - cnum[j])/(2*sm)*(i - (tp[j] - sm)) )
+    clist.append( cim(cnum[j] + cn0) )
+mycmap2 = LinearSegmentedColormap.from_list('colormap_name', clist)
 
-def plot_cxy(): # y1, y2プロット用
+
+def plot_cxy(): # cxyプロット用
     fig = plt.figure(figsize = (4.8*figs, 2.4*figs), dpi = 100, linewidth = 0)
     ax1 = fig.add_subplot(111)
     ax1.set_aspect('equal') # アスペクト比を数値通りに表示する
@@ -116,7 +145,7 @@ def plot_cxy(): # y1, y2プロット用
     im = ax1.imshow(c_plt, # cxyは2次元配列
                     interpolation = 'bicubic', # 補間方法 bilinear, noneなど
                     extent = extent1, 
-                    cmap = 'viridis', # カラーマップの種類
+                    cmap = cmap1, # カラーマップの種類 'viridis'など
                     origin = 'lower', # 原点を下にする
                     vmin = vm[0], vmax = vm[1])
 
