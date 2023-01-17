@@ -21,5 +21,7 @@ There are plot results (`pdf` files).
 
 
 ## To be updated
-### Log scale
-### Animation
+- Log scale
+- Animation
+- 3D plot
+- Binary read
