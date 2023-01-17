@@ -35,7 +35,7 @@ dxi = Lxi/nxi
 #     y = dxi[1]*i2
 #     for i1 in range(nxi[0] + 1):
 #         x = dxi[0]*i1
-#         cxy = np.sin(2*math.pi*(y/Lxi[1] + x/Lxi[1]))
+#         cxy = np.sin(2*math.pi*(y/Lxi[1] - x/Lxi[1]))
 #         f.write('%8.3f %8.3f %8.3f\n'%(x, y, cxy))
 # f.close()
 
@@ -101,6 +101,7 @@ def plot_cxy(): # y1, y2プロット用
     ax1.set_ylim(ym[0], ym[1])
     ax1.set_xticks( np.arange(xm[0], xm[1] + 1.e-3, xm[2]) ) # xm[0]からxm[1]までxm[2]刻みの目盛り線
     ax1.set_yticks( np.arange(ym[0], ym[1] + 1.e-3, ym[2]) ) # yの目盛り線
+    # ax1.set_xticklabels([0, 1, 2, 3, r'$x_\mathrm{max}$']) # 目盛りに文字列を入れる
     ax1.tick_params(axis='x', pad = tpad[0])
     ax1.tick_params(axis='y', pad = tpad[1])
 
@@ -119,14 +120,22 @@ def plot_cxy(): # y1, y2プロット用
                     origin = 'lower', # 原点を下にする
                     vmin = vm[0], vmax = vm[1])
 
+    extend1 = 'neither' # extendの設定。データの値がカラーバーの値の範囲を超えていれば三角にする
+    if vm[0] > np.nanmin(c_plt) and vm[1] < np.nanmax(c_plt):
+        extend1 = 'both'
+    elif vm[0] > np.nanmin(c_plt):
+        extend1 = 'min'
+    elif vm[1] < np.nanmax(c_plt):
+        extend1 = 'max'
     axpos = ax1.get_position() # グラフの位置情報を取得　x0左端, x1右端, y0下端, y1上端, height高さ
     pp_ax = fig.add_axes([axpos.x1 + 0.02, axpos.y0, 0.03, axpos.height]) # カラーバーの左下のx,y,幅,高さ
-    pp = fig.colorbar(im, ax = ax1, orientation="vertical", cax = pp_ax)
-    pp.set_ticks( np.arange(vm[0], vm[1] + 1.e-3, vm[2]) ) # カラーバーの目盛り線
-    pp.set_label(lc, labelpad = 5)  # カラーバーのラベル
+    pp = fig.colorbar(im, ax = ax1, orientation = "vertical", cax = pp_ax, extend = extend1)
+    cticks = np.arange(vm[0], vm[1] + 1.e-3, vm[2])
+    pp.set_ticks(cticks) # カラーバーの目盛り線
+    # pp.set_ticklabels([cticks[0], cticks[1], cticks[2], r'$c_\mathrm{c}$', cticks[4]]) # 目盛りに文字列を入れる
+    pp.set_label(lc, labelpad = 5, loc = 'center', rotation = 90)  # カラーバーのラベル。rotationでラベルを回転（デフォルトは90）
 
-    ### 保存
-    fig.savefig(plotdir + "02plot_cxy" + ext, bbox_inches = "tight") # bbox_inches="tight"で余白をなくす
+    fig.savefig(plotdir + "02plot_cxy" + ext, bbox_inches = "tight") # 保存。bbox_inches="tight"で余白をなくす
 
 ##=================== main ===================##
 if __name__ == '__main__':
