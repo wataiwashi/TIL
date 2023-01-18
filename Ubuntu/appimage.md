@@ -10,9 +10,9 @@
 1. Move AppImage file to certain directry, e.g, `/opt/softwarename/`. 
 1. Make `softwarename.desktop` file in `~/.local/share/applications/`. 
     - Below, the content of `mendeley-reference-manager.desktop` for example. 
-    - Please put image file in the path for Icon if you need. 
+    - Please put image file, e.g., `image.png`, in the path of Icon field if you need. 
 
-`/opt/softwarename/mendeley-reference-manager.desktop`
+`~/.local/share/applications/mendeley-reference-manager.desktop`
 ```
 [Desktop Entry]
 Name=Mendeley Referenced Manager
