@@ -5,8 +5,10 @@
     - `chmod a+x softwarename.AppImage`
     - Test launch with `./software.AppImage`
       - If core dump, try it with `--in-process-gpu` option. 
-3. Move AppImage file to certain directry, e.g, `/opt/softwarename/`. 
-4. Make `softwarename.desktop` file in `~/.local/share/applications/`. 
+
+## Add to launcher
+1. Move AppImage file to certain directry, e.g, `/opt/softwarename/`. 
+1. Make `softwarename.desktop` file in `~/.local/share/applications/`. 
     - Below, the content of `mendeley-reference-manager.desktop` for example. 
     - Please put image file in the path for Icon if you need. 
 
