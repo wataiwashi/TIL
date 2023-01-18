@@ -12,17 +12,17 @@
     - Below, the content of `mendeley-reference-manager.desktop` for example. 
     - Please put image file, e.g., `image.png`, in the path of Icon field if you need. 
 
-`~/.local/share/applications/mendeley-reference-manager.desktop`
-```
-[Desktop Entry]
-Name=Mendeley Referenced Manager
-Comment=Mendeley Reference Manager is software for managing and sharing research papers
-Exec=/opt/mendeley-reference-manager/mendeley-reference-manager-2.83.0-beta.0-x86_64.AppImage --in-process-gpu
-Icon=/opt/mendeley-reference-manager/mendeley-reference-manager.png
-Terminal=false
-Type=Application
-Categories=Education;Literature;Qt;
-```
+    `~/.local/share/applications/mendeley-reference-manager.desktop`
+    ```
+    [Desktop Entry]
+    Name=Mendeley Referenced Manager
+    Comment=Mendeley Reference Manager is software for managing and sharing research papers
+    Exec=/opt/mendeley-reference-manager/mendeley-reference-manager-2.83.0-beta.0-x86_64.AppImage --in-process-gpu
+    Icon=/opt/mendeley-reference-manager/mendeley-reference-manager.png
+    Terminal=false
+    Type=Application
+    Categories=Education;Literature;Qt;
+    ```
 
 1. Check launcher and if there is the application of the AppImage. 
 
