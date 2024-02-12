@@ -39,14 +39,14 @@ if fsize == 0:
     tck_s1, alw = 3, 0.625
     ctxt1 = 'paper'
     lpad = [5, 5] # Space between tick label and label
-    tpad = 5      # Space between axis and tick label
+    tpad = 8      # Space between axis and tick label
 else:
     figs = 2.
     fs1, lw1, ms1 = 1.5, 3., 14.
     tck_s1, alw = 7, 1.25
     ctxt1, ext = 'talk', '_talk' + ext
     lpad = [10, 8]
-    tpad = 12
+    tpad = 15
 
 def sns_set(fs, tck_s, alw, ctxt):
     sns.set(
@@ -82,13 +82,13 @@ def plot_y3(): # y3 plot
 
     xm = [-0.0, 10.0, 2.5]
     ax1.set_xlim(xm[0], xm[1]) # Range of axis
-    ax1.set_ylim(ym[0], ym[1])
     ax1.set_xticks( np.arange(0.0, xm[1] + 1.e-3, xm[2]) ) # Ticks in xm[2] increments from xm[0] to xm[1]
     ax1.tick_params(axis = 'both', pad = tpad)
 
     ax1.set_yscale('log') ### log scale y axis
 
     ym = [np.nanmin(y3)*0.5, np.nanmax(y3)*2.0, None]
+    ax1.set_ylim(ym[0], ym[1])
     int_logym = [math.ceil( np.log10(ym[0])*0.999 ), int( np.log10(ym[1]) )]
     y_tl = []; y_t = np.empty(0)
     for i in range(int_logym[0], int_logym[1] + 1): # Set y tick label
