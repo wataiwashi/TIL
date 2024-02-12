@@ -10,6 +10,7 @@ from matplotlib import cm
 from matplotlib.colors import ListedColormap
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.colors import LogNorm
+from matplotlib.colors import Normalize
 import seaborn as sns
 import os
 import sys
@@ -68,7 +69,7 @@ lx, ly, lc = r'$x/L_0$', r'$y/L_0$', r'$\tilde{c}_\mathrm{a}(x,y,t)$' # Use TeX 
 lc2 = r'$\alpha(x,y,t)$'
 if fsize == 0:
     figs, figs_ani = 1.0, 0.3
-    fs1 = 1.
+    fs1 = 1.0
     tck_s1, alw = 3, 0.625
     ctxt1 = 'paper'
     lpad = 5 # Space between tick label and label
@@ -78,8 +79,8 @@ else:
     fs1 = 1.5
     tck_s1, alw = 7, 1.25
     ctxt1, ext = 'talk', '_talk' + ext
-    lpad = 10
-    tpad = 10
+    lpad = 11
+    tpad = 11
 
 vm1 = [-1.0, 0.6] # Range of color bar
 vm1.append( (vm1[1] - vm1[0])/4.0 )
@@ -201,7 +202,8 @@ class mk_animation:
                         extent = extent1, 
                         cmap = mycmap1,            # Color map type
                         origin = 'lower',          # Set origin lower
-                        vmin = vm1[0], vmax = vm1[1])
+                        norm = Normalize(vmin = vm1[0], vmax = vm1[1])
+                        )
 
         if not cbar_initialized:
             cbar_initialized = True ### Important for color map animation! 
@@ -210,7 +212,6 @@ class mk_animation:
             pp = fig.colorbar(im, ax = ax1, orientation = "vertical", cax = pp_ax, extend = extend_ani)
             pp.ax.yaxis.set_tick_params(pad = tpad, right = False, which = "minor")
             pp.set_ticks( np.arange(vm1[0], vm1[1] + 1.e-3, vm1[2]) ) # Color bar ticks
-            # pp.set_ticklabels([cticks[0], cticks[1], cticks[2], r'$c_\mathrm{c}$', cticks[4]]) # Put text in ticks
             pp.set_label(lc, labelpad = lpad, loc = 'center', rotation = 90)  # Color bar label, rotate with rotation (Default: 90)
 
     def ani_single_cmap(self): ### Single color map
@@ -223,50 +224,97 @@ class mk_animation:
         ani = animation.FuncAnimation(fig, self.update_single_cmap, fargs = (ax1, fig), interval = ani_t*1000/(nt_p - 1), frames = nt_p)
         ani.save(plotdir + '04plot_ani_single' + ext_ani, writer = 'ffmpeg')
 
-    def update_multiple(self, i, ax1, fig):
+    def update_multiple(self, i, ax0, ax_l, axc, fig):
         global cbar_initialized
         t_p = dt_p*i + 1.0e-8
-        ax1.cla()
-        ax1.set_aspect('equal') # Follow aspect ratio
-        ax1.set_xlabel(lx, labelpad = lpad) # Axis label
-        ax1.set_ylabel(ly, labelpad = lpad)
-        ax1.tick_params(axis = 'both', pad = tpad)
-        ax1.set_xlim(xm_c[0], xm_c[1]) # Range of axis
-        ax1.set_ylim(ym_c[0], ym_c[1])
-        ax1.set_xticks( np.arange(xm_c[0], xm_c[1] + 1.0e-3, xm_c[2]) ) # x ticks in xm[2] increments from xm[0] to xm[1]
-        ax1.set_yticks( np.arange(ym_c[0], ym_c[1] + 1.0e-3, ym_c[2]) ) # y ticks
-        ax1.text(0.45, 1.07, r'$t = %4.1f \,\mathrm{s}$'%(t_p), verticalalignment = 'center_baseline', transform = ax1.transAxes)
+        ax0.cla()
+        ax0.axis("off")
+        ax0.text(0.1, 1.0, r'$t = %4.1f \,\mathrm{s}$'%(t_p), verticalalignment = 'center_baseline', transform = ax0.transAxes)
+        for i1 in range(len(axc)):
+            axc[i1].cla()
+            axc[i1].set_aspect('equal') # Follow aspect ratio
+            axc[i1].set_xlabel(lx, labelpad = lpad) # Axis label
+            axc[i1].set_ylabel(ly, labelpad = lpad)
+            axc[i1].tick_params(axis = 'both', pad = tpad)
+            axc[i1].set_xlim(xm_c[0], xm_c[1]) # Range of axis
+            axc[i1].set_ylim(ym_c[0], ym_c[1])
+            axc[i1].set_xticks( np.arange(xm_c[0], xm_c[1] + 1.0e-3, xm_c[2]) ) # x ticks in xm[2] increments from xm[0] to xm[1]
+            axc[i1].set_yticks( np.arange(ym_c[0], ym_c[1] + 1.0e-3, ym_c[2]) ) # y ticks
 
-        c_plt = np.loadtxt(ddir_ani + 'data%5.5d.dat'%(i), usecols = 2, dtype = 'float32')
-        c_plt = alpha_t(c_plt, t_p)
-        c_plt = c_plt.reshape([nxi[1] + 1, -1])    # Reshape loaded data into 2D array. y and x grid points. -1: automatically determined
-        im = ax1.imshow(c_plt,                     # c_plt is 2D array
-                        interpolation = 'bicubic', # Interpolation (bilinear, none, etc.)
-                        extent = extent1, 
-                        cmap = mycmap2,            # Color map type
-                        origin = 'lower',          # Set origin lower
-                        norm = LogNorm(vmin = vm2[0], vmax = vm2[1]) # Log scale
-                        )
+            if i1 == 0:
+                c_plt = np.loadtxt(ddir_ani + 'data%5.5d.dat'%(i), usecols = 2, dtype = 'float32')
+                norm1 = Normalize(vmin = vm1[0], vmax = vm1[1])
+                cm_ml = mycmap1
+                p_arr1 = np.arange(vm1[0], vm1[1] + 1.e-5, vm1[2])
+                pp_list = [extend_ani, p_arr1, np.round(p_arr1, 3), lc]
+            else:
+                c_plt = np.loadtxt(ddir_ani + 'data%5.5d.dat'%(i), usecols = 2, dtype = 'float32')
+                c_plt = alpha_t(c_plt, t_p)
+                norm1 = LogNorm(vmin = vm2[0], vmax = vm2[1]) # Log scale
+                cm_ml = mycmap2
+                pp_list = [extend_ani2, c2_t, c2_tl, lc2]
 
-        if not cbar_initialized:
-            cbar_initialized = True ### Important for color map animation! 
-            axpos = ax1.get_position() # Get ax1 position. x0: left, x1: right, y0: bottom, y1: top, height: height
-            pp_ax = fig.add_axes([axpos.x1 + 0.02, axpos.y0, 0.03, axpos.height]) # Color bar left bottom x and y, width, height
-            pp = fig.colorbar(im, ax = ax1, orientation = "vertical", cax = pp_ax, extend = extend_ani2)
-            pp.ax.yaxis.set_tick_params(pad = tpad, right = False, which = "minor")
-            pp.ax.tick_params(axis = 'y', length = tck_s1*0.8, width = alw, direction = 'inout')
-            pp.set_ticks(c2_t) # Color bar ticks
-            pp.set_ticklabels(c2_tl) # Color bar tick labels
-            pp.set_label(lc2, labelpad = lpad, loc = 'center', rotation = 90)  # Color bar label, rotate with rotation (Default: 90)
+            c_plt = c_plt.reshape([nxi[1] + 1, -1])    # Reshape loaded data into 2D array. y and x grid points. -1: automatically determined
+            im = axc[i1].imshow(c_plt,                     # c_plt is 2D array
+                            interpolation = 'bicubic', # Interpolation (bilinear, none, etc.)
+                            extent = extent1, 
+                            cmap = cm_ml,            # Color map type
+                            origin = 'lower',          # Set origin lower
+                            norm = norm1
+                            )
+
+            if not cbar_initialized:
+                if i1 == len(axc) - 1:
+                    cbar_initialized = True ### Important for color map animation! 
+                axpos = axc[i1].get_position() # Get ax1 position. x0: left, x1: right, y0: bottom, y1: top, height: height
+                pp_ax = fig.add_axes([axpos.x1 + 0.015, axpos.y0, 0.015, axpos.height]) # Color bar left bottom x and y, width, height
+                pp = fig.colorbar(im, ax = axc[i1], orientation = "vertical", cax = pp_ax, extend = pp_list[0])
+                pp.ax.yaxis.set_tick_params(pad = tpad, right = False, which = "minor")
+                pp.ax.tick_params(axis = 'y', length = tck_s1*0.8, width = alw, direction = 'inout')
+                pp.set_ticks(pp_list[1]) # Color bar ticks
+                pp.set_ticklabels(pp_list[2]) # Color bar tick labels
+                pp.set_label(pp_list[3], labelpad = lpad, loc = 'center', rotation = 90)  # Color bar label, rotate with rotation (Default: 90)
+
+            ax_l[i1].cla()
+            if i1 == 0:
+                ax_l[i1].set_xlabel(lx, labelpad = lpad) # Axis label
+                ax_l[i1].set_ylabel(r'$\tilde{c}_\mathrm{a} (x=0,y,t)$', labelpad = lpad)
+                ax_l[i1].set_xlim(xm_c[0], xm_c[1])
+                ax_l[i1].set_ylim(-1.1,    1.1)
+                ax_l[i1].set_xticks( np.arange(xm_c[0], xm_c[1] + 1.0e-3, xm_c[2]) )
+                ax_l[i1].plot(x1[0, :], c_plt[0, :], lw = 1.5*fs1, c = 'black')
+            else:
+                ax_l[i1].set_xlabel(ly, labelpad = lpad)
+                ax_l[i1].set_ylabel(r'$\alpha(x,y=0,t)$', labelpad = lpad)
+                ax_l[i1].set_xlim(ym_c[0], ym_c[1])
+                ax_l[i1].set_xticks( np.arange(ym_c[0], ym_c[1] + 1.0e-3, ym_c[2]) )
+                ax_l[i1].set_yscale('log') ### log scale y axis
+                ax_l[i1].set_ylim(vm2[0],  vm2[1])
+                ax_l[i1].set_yticks(c2_t, c2_tl)
+                ax_l[i1].plot(y1[:, 0], c_plt[:, 0], lw = 1.5*fs1)
+            ax_l[i1].tick_params(axis = 'both', pad = tpad)
 
     def ani_multiple(self): ### Multiple
         fig = plt.figure(figsize = (16.0*figs_ani, 9.0*figs_ani), dpi = 100, linewidth = 0)
-        ax1 = fig.add_subplot(111)
-        chartB = ax1.get_position()
-        ax1.set_position([chartB.x0, chartB.y0, chartB.width*0.88, chartB.height]) # Graph position and size
+        ax0 = fig.add_subplot(111)
 
-        ani_t = tmax*2.0 # Animation time
-        ani = animation.FuncAnimation(fig, self.update_multiple, fargs = (ax1, fig), interval = ani_t*1000/(nt_p - 1), frames = nt_p)
+        axl_1 = fig.add_subplot(2, 2, 2)
+        axl_2 = fig.add_subplot(2, 2, 4)
+        ax_l = [axl_1, axl_2]
+        ax_l_s = 0.75
+        for i in range(len(ax_l)):
+            chartB = ax_l[i].get_position()
+            ax_l[i].set_position([chartB.x0 + 0.07, chartB.y0 + chartB.height*(1.0 - ax_l_s)/2.0, chartB.width*ax_l_s, chartB.height*ax_l_s]) # Graph position and size
+
+        axc_1 = fig.add_subplot(2, 2, 1)
+        axc_2 = fig.add_subplot(2, 2, 3)
+        axc = [axc_1, axc_2]
+        for i in range(len(axc)):
+            chartB = axc[i].get_position()
+            axc[i].set_position([chartB.x0 - 0.03, chartB.y0, chartB.width*0.85, chartB.height]) # Graph position and size
+
+        ani_t = tmax*2.5 # Animation time
+        ani = animation.FuncAnimation(fig, self.update_multiple, fargs = (ax0, ax_l, axc, fig), interval = ani_t*1000/(nt_p - 1), frames = nt_p)
         ani.save(plotdir + '04plot_ani_multiple' + ext_ani, writer = 'ffmpeg')
 
 ##=================== main ===================##
