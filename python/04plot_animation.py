@@ -19,7 +19,7 @@ start = time.time()
 
 fshow = 0   # Display popup 0: no, 1: yes
 ### Output setting
-fsize = 0   # 0: small size for paper, 1: large size for talk
+fsize = 1   # 0: small size for paper, 1: large size for talk
 ext = 'pdf' # File extension (pdf, svg, png, etc.)
 ext_ani = 'mov'  # Animation extension (mov, mp4, etc.)
 plotdir = 'plot' # Plot file save directry
