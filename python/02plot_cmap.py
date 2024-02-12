@@ -17,16 +17,16 @@ fshow = 0 # 結果のポップアップ表示
 fsize = 0   # 0：小さいサイズ（論文用）　1：大きいサイズ（プレゼン用）
 ext = 'pdf' # 保存ファイルの拡張子　pdf,svg,pngなど
 plotdir = 'plot' # 保存用ディレクトリ
-os.makedirs(plotdir, exist_ok = True) # ディレクトリ作成
 
 datadir = 'data'
 plotdir, datadir, ext = plotdir + '/', datadir + '/', '.' + ext
 dfile   = datadir + 'data2.dat'
 
-if os.path.exists(plotdir) == False:  # plotdirやdatadirが存在しないときに中止する
-    sys.exit("plotdir error: %s"%plotdir)
-elif os.path.exists(datadir) == False:
+if os.path.exists(datadir) == False:  # Cancel if datadir or plotdir does not exist
     sys.exit("datadir error: %s"%datadir)
+os.makedirs(plotdir, exist_ok = True) # Make plotdir
+if os.path.exists(plotdir) == False:
+    sys.exit("plotdir error: %s"%plotdir)
 
 ### プロット用のデータ
 nxi = np.array([16, 8]) # データの数
