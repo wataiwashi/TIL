@@ -12,6 +12,7 @@
 - [01 Line plot](https://github.com/wataiwashi/TIL/blob/master/python/01plot_simple.py)
 - [02 Color map](https://github.com/wataiwashi/TIL/blob/master/python/02plot_cmap.py)
 - [03 Log plot](https://github.com/wataiwashi/TIL/blob/master/python/03plot_log.py)
+- [04 Animation plot](https://github.com/wataiwashi/TIL/blob/master/python/04plot_animation.py)
 
 ### [data/][data-l] directry
 There are data files (`dat` files). 
@@ -21,7 +22,6 @@ There are plot results (`pdf` files).
 
 
 ## To be updated
-- Animation
 - 3D plot
 - Binary read
 
