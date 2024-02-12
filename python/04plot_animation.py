@@ -12,6 +12,8 @@ from matplotlib.colors import LinearSegmentedColormap
 import seaborn as sns
 import os
 import sys
+import warnings
+warnings.simplefilter("ignore", category = DeprecationWarning)
 import time
 start = time.time()
 
@@ -67,14 +69,14 @@ if fsize == 0:
     fs1 = 1.
     tck_s1, alw = 3, 0.625
     ctxt1 = 'paper'
-    lpad = [5, 5] # Space between tick label and label
-    tpad = 5      # Space between axis and tick label
+    lpad = 5 # Space between tick label and label
+    tpad = 5 # Space between axis and tick label
 else:
     figs, figs_ani = 2.0, 1.0
     fs1 = 1.5
     tck_s1, alw = 7, 1.25
     ctxt1, ext = 'talk', '_talk' + ext
-    lpad = [10, 8]
+    lpad = 10
     tpad = 10
 
 vm1 = [-1.0, 0.6] # Range of color bar
@@ -153,8 +155,8 @@ class mk_animation:
         t_p = dt_p*i + 1.0e-6
         ax1.cla()
         ax1.set_aspect('equal') # Follow aspect ratio
-        ax1.set_xlabel(lx, labelpad = lpad[0]) # Axis label
-        ax1.set_ylabel(ly, labelpad = lpad[1])
+        ax1.set_xlabel(lx, labelpad = lpad) # Axis label
+        ax1.set_ylabel(ly, labelpad = lpad)
         ax1.tick_params(axis = 'both', pad = tpad)
         ax1.set_xlim(xm_c[0], xm_c[1]) # Range of axis
         ax1.set_ylim(ym_c[0], ym_c[1])
@@ -179,7 +181,7 @@ class mk_animation:
             pp.ax.yaxis.set_tick_params(pad = tpad, right = False, which = "both")
             pp.set_ticks( np.arange(vm1[0], vm1[1] + 1.e-3, vm1[2]) ) # Color bar ticks
             # pp.set_ticklabels([cticks[0], cticks[1], cticks[2], r'$c_\mathrm{c}$', cticks[4]]) # Put text in ticks
-            pp.set_label(lc, labelpad = lpad[0], loc = 'center', rotation = 90)  # Color bar label, rotate with rotation (Default: 90)
+            pp.set_label(lc, labelpad = lpad, loc = 'center', rotation = 90)  # Color bar label, rotate with rotation (Default: 90)
 
     def ani_single_cmap(self): ### Single color map
         fig = plt.figure(figsize = (16.0*figs_ani, 9.0*figs_ani), dpi = 100, linewidth = 0)
