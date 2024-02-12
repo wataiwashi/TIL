@@ -51,9 +51,9 @@ def sns_set(fs, tck_s, alw, ctxt):
         font_scale = fs,  # フォントスケール指定（これを変えるとcontextで決まるプリセットを更にいじれる）
         style = None, 
         # style = "whitegrid",   # 背景白，グリッドあり
-        rc = {"text.usetex": True, 
-        'text.latex.preamble' : r'\newcommand{\ssmr}[1]{_\mathrm{#1}}', # LaTeXのプリアンブル
-        # 'text.latex.preamble' : r'\usepackage{txfonts}',   # nature系のフォント、ギリシャ文字あるとき
+        rc = {
+        'text.usetex': True, 
+        'text.latex.preamble' : r'\usepackage{txfonts}',   # LaTeXのプリアンブル, txfonts: nature系のフォント、ギリシャ文字あるとき
         'grid.linestyle': '--', 'grid.linewidth': 0, 
         "xtick.direction":"in", "xtick.major.width":0.8*alw, "xtick.major.size":tck_s, 
         "ytick.direction":"in", "ytick.major.width":0.8*alw, "ytick.major.size":tck_s, 

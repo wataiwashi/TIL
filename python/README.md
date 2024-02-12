@@ -1,9 +1,10 @@
 # Python
 
 - Please copy the python file `filename.py` and [data][data-l] directry. 
-- Excute program with `python3 filename.py` command in your terminal. 
+- Execute program with `python3 filename.py` command in your terminal. 
 - Using python3 of [Anaconda3](https://www.anaconda.com/) is recommended. 
 - All programs use LaTeX font. Please install LaTeX, e.g., `texlive` or remove the TeX part in the program. 
+    - If you are not in LaTeX environment, please comment out `text.usetex` and `text.latex.preamble` parts. 
 - You can switch the plot size with `fsize` in all programs (`fsize=0`: paper size and `fsize=1`: presentation size). 
 
 

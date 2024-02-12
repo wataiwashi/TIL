@@ -33,9 +33,9 @@ def sns_set(fs, tck_s, alw, ctxt):
         font_scale = fs,  # フォントスケール指定（これを変えるとcontextで決まるプリセットを更にいじれる）
         style = None, 
         # style = "whitegrid",   # 背景白，グリッドあり
-        rc = {"text.usetex": True, 
-        'text.latex.preamble' : r'\newcommand{\ssmr}[1]{_\mathrm{#1}}', # LaTeXのプリアンブル
-        # 'text.latex.preamble' : r'\usepackage{txfonts}',   # nature系のフォント、ギリシャ文字あるとき
+        rc = {
+        'text.usetex': True, 
+        'text.latex.preamble' : r'\usepackage{txfonts}',   # LaTeXのプリアンブル, txfonts: nature系のフォント、ギリシャ文字あるとき
         'grid.linestyle': '--', 'grid.linewidth': 0, 
         "xtick.direction":"in", "xtick.major.width":0.8*alw, "xtick.major.size":tck_s, 
         "ytick.direction":"in", "ytick.major.width":0.8*alw, "ytick.major.size":tck_s, 
@@ -86,7 +86,7 @@ def plot_y1y2(): # y1, y2プロット用
 
     ### 水平線と鉛直線
     ax1.axhline(0, lw = lw1*0.8, ls = 'dotted', label = r'$y=0$')
-    ax1.axvline(4.8, lw = lw1*0.8, ls = 'dashed', dashes = [2, 5], color = 'C2', label = r'$x=x\ssmr{c}$') # dashesで破線の間隔などを設定できる
+    ax1.axvline(4.8, lw = lw1*0.8, ls = 'dashed', dashes = [2, 5], color = 'C2', label = r'$x=x_\mathrm{c}$') # dashesで破線の間隔などを設定できる
     ytext = -22.
     ax1.axhline(ytext, lw = lw1*0.8, c = 'C4', ls = 'dashdot')
     ax1.text(0.7, (ytext - ym[0])/(ym[1] - ym[0]) + 0.05, r'$y=%4.1f$'%(ytext), transform = ax1.transAxes) # 図中にtextを入れる
