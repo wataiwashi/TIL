@@ -42,25 +42,6 @@ dxi = Lxi/nxi
 #         f.write('%8.3f %8.3f %8.3f\n'%(x, y, cxy))
 # f.close()
 
-def sns_set(fs, tck_s, alw, ctxt):
-    sns.set(
-        context = ctxt,  # フォントサイズ・線幅（'paper' or 'talk'）
-        palette = sns.color_palette("colorblind"),
-        font = "serif",       # フォント指定
-        # font = "sans-serif",  # サンセリフ体
-        font_scale = fs,  # フォントスケール指定（これを変えるとcontextで決まるプリセットを更にいじれる）
-        style = None, 
-        # style = "whitegrid",   # 背景白，グリッドあり
-        rc = {
-        'text.usetex': True, 
-        'text.latex.preamble' : r'\usepackage{txfonts}',   # LaTeXのプリアンブル, txfonts: nature系のフォント、ギリシャ文字あるとき
-        'grid.linestyle': '--', 'grid.linewidth': 0, 
-        "xtick.direction":"in", "xtick.major.width":0.8*alw, "xtick.major.size":tck_s, 
-        "ytick.direction":"in", "ytick.major.width":0.8*alw, "ytick.major.size":tck_s, 
-        "axes.linewidth":alw
-        }
-    )
-
 ### 読み込み
 x1  = np.loadtxt(dfile, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数int64など
 y1  = np.loadtxt(dfile, usecols = 1, dtype = 'float64')
@@ -113,6 +94,24 @@ for i in range(1, cim.N):
     clist.append( cim(cnum[j] + cn0) )
 mycmap2 = LinearSegmentedColormap.from_list('colormap_name', clist)
 
+def sns_set(fs, tck_s, alw, ctxt):
+    sns.set(
+        context = ctxt,  # フォントサイズ・線幅（'paper' or 'talk'）
+        palette = sns.color_palette("colorblind"),
+        font = "serif",       # フォント指定
+        # font = "sans-serif",  # サンセリフ体
+        font_scale = fs,  # フォントスケール指定（これを変えるとcontextで決まるプリセットを更にいじれる）
+        style = None, 
+        # style = "whitegrid",   # 背景白，グリッドあり
+        rc = {
+        'text.usetex': True, 
+        'text.latex.preamble' : r'\usepackage{txfonts}',   # LaTeXのプリアンブル, txfonts: nature系のフォント、ギリシャ文字あるとき
+        'grid.linestyle': '--', 'grid.linewidth': 0, 
+        "xtick.direction":"in", "xtick.major.width":0.8*alw, "xtick.major.size":tck_s, 
+        "ytick.direction":"in", "ytick.major.width":0.8*alw, "ytick.major.size":tck_s, 
+        "axes.linewidth":alw
+        }
+    )
 
 def plot_cxy(): # cxyプロット用
     fig = plt.figure(figsize = (4.8*figs, 2.4*figs), dpi = 100, linewidth = 0)
