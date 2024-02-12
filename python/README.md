@@ -11,6 +11,7 @@
 ## Contents
 - [01 Line plot](https://github.com/wataiwashi/TIL/blob/master/python/01plot_simple.py)
 - [02 Color map](https://github.com/wataiwashi/TIL/blob/master/python/02plot_cmap.py)
+- [03 Log plot](https://github.com/wataiwashi/TIL/blob/master/python/03plot_log.py)
 
 ### [data/][data-l] directry
 There are data files (`dat` files). 
