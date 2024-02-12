@@ -13,7 +13,8 @@
 - [02 Color map](https://github.com/wataiwashi/TIL/blob/master/python/02plot_cmap.py)
 - [03 Log plot](https://github.com/wataiwashi/TIL/blob/master/python/03plot_log.py)
 - [04 Animation plot](https://github.com/wataiwashi/TIL/blob/master/python/04plot_animation.py)
-    - <a href="https://youtu.be/5IvF-Mo2QdA" target="_blank" rel="noopener noreferrer">YouTube link: 04plot_ani_single.mov</a> (single colormap animation)
+    - <a href="https://youtu.be/udwaXRFr-uM?si=G_Y4-08vfTf4J38A" target="_blank" rel="noopener noreferrer">YouTube link: 04plot_ani_single.mov</a> (single colormap animation)
+    - <a href="https://youtu.be/P60MPKb7BFo?si=JGsqd0yG01gY8sEI" target="_blank" rel="noopener noreferrer">YouTube link: 04plot_ani_multiple.mov</a> (multiple colormap animation)
 
 ### [data/][data-l] directry
 There are data files (`dat` files). 
