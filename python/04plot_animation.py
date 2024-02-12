@@ -9,6 +9,7 @@ import matplotlib.animation as animation
 from matplotlib import cm
 from matplotlib.colors import ListedColormap
 from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.colors import LogNorm
 import seaborn as sns
 import os
 import sys
@@ -33,7 +34,7 @@ ddir_ani, ext_ani = datadir + ddir_ani + '/', '.' + ext_ani
 nt_p = 51 # number of time step
 tmax = 10.0
 dt_p = tmax/(nt_p - 1) # time per step
-nxi  = np.array([16, 8])    # Number of x and y data
+nxi  = np.array([64, 32])    # Number of x and y data
 Lxi  = np.array([4.0, 2.0]) # Max of x and y
 dxi  = Lxi/nxi              # Grid length
 ### Create data. Can comment out if data files exist
@@ -63,7 +64,8 @@ x1  =  x1.reshape([nxi[1] + 1, -1]) # Reshape loaded data into 2D array. y and x
 y1  =  y1.reshape([nxi[1] + 1, -1]) # Reshape loaded data into 2D array. y and x grid points. -1: automatically determined
 
 ### Setting of size, label, etc.
-lx, ly, lc = r'$x/L_0$', r'$y/L_0$', r'$\tilde{c}_\mathrm{a}(x,y)$' # Use TeX character with r''
+lx, ly, lc = r'$x/L_0$', r'$y/L_0$', r'$\tilde{c}_\mathrm{a}(x,y,t)$' # Use TeX character with r''
+lc2 = r'$\alpha(x,y,t)$'
 if fsize == 0:
     figs, figs_ani = 1.0, 0.3
     fs1 = 1.
@@ -81,16 +83,33 @@ else:
 
 vm1 = [-1.0, 0.6] # Range of color bar
 vm1.append( (vm1[1] - vm1[0])/4.0 )
+vm2 = [math.sqrt(10.0)*1.0e-2, math.sqrt(10.0)*1.0e2] # Range of color bar
+
+alpha_max = 1.0e2
+def alpha_t(array1, t_in):
+    return (array1 - np.nanmin(cxy0))*alpha_max*math.cos(math.pi*t_in/5.0)**2.0 + 8.0e-2
 
 hide_ani_cmap = 1 ### Must be 1
 if hide_ani_cmap == 1: ### Setting for color map animation
     it_m, cxy_m = [0, 0], [np.nanmin(cxy0), np.nanmax(cxy0)]
+    extend_ani2 = 'neither'
     for it in range(nt_p):
-        cxy = np.loadtxt(ddir_ani + 'data%5.5d.dat'%(it), usecols = 2, dtype = 'float32')
+        cxy  = np.loadtxt(ddir_ani + 'data%5.5d.dat'%(it), usecols = 2, dtype = 'float32')
         if np.nanmin(cxy) < cxy_m[0]:
             it_m[0], cxy_m[0] = it, np.nanmin(cxy)
         if np.nanmax(cxy) > cxy_m[1]:
             it_m[1], cxy_m[1] = it, np.nanmax(cxy)
+
+        cxy2 = np.loadtxt(ddir_ani + 'data%5.5d.dat'%(it), usecols = 2, dtype = 'float32')
+        cxy2 = alpha_t(cxy2, dt_p*it)
+        if extend_ani2 == 'neither':
+            if vm2[0] > np.nanmin(cxy2):
+                extend_ani2 = 'min'
+            if vm2[1] < np.nanmax(cxy2):
+                extend_ani2 = 'max'
+        if ( extend_ani2 == 'min' and vm2[1] < np.nanmax(cxy2) ) or ( extend_ani2 == 'max' and vm2[0] > np.nanmin(cxy2) ):
+            extend_ani2 = 'both'
+
     extend_ani = 'neither' # extend setting. If data exceed min or max value, make edge triangle
     if vm1[0] > cxy_m[0] and vm1[1] < cxy_m[1]:
         extend_ani = 'both'
@@ -98,6 +117,17 @@ if hide_ani_cmap == 1: ### Setting for color map animation
         extend_ani = 'min'
     elif vm1[1] < cxy_m[1]:
         extend_ani = 'max'
+
+    int_logvm = [math.ceil( np.log10(vm2[0])*0.999 ), int( np.log10(vm2[1]) )]
+    c2_tl = []; c2_t = np.empty(0)
+    for i in range(int_logvm[0], int_logvm[1] + 1): # Set y tick label
+        c2_t = np.append(c2_t, 10**i)
+        if i == 0:
+            c2_tl.append( r'$1$' )  # Set 10^0 as 1
+        elif i == 1:
+            c2_tl.append( r'$10$' ) # Set 10^1 as 10
+        else:
+            c2_tl.append( r'$10^{%d}$'%(i) )
 
     xm_c, ym_c = [0, Lxi[0], 1.0], [0, Lxi[1], 1.0]
     extent1 = [xm_c[0] - dxi[0]*0.5, xm_c[1] + dxi[0]*0.5, ym_c[0] - dxi[1]*0.5, ym_c[1] + dxi[1]*0.5] # Range of color map. dxi: grid length of xi. Careful for imshow format
@@ -162,7 +192,7 @@ class mk_animation:
         ax1.set_ylim(ym_c[0], ym_c[1])
         ax1.set_xticks( np.arange(xm_c[0], xm_c[1] + 1.0e-3, xm_c[2]) ) # x ticks in xm[2] increments from xm[0] to xm[1]
         ax1.set_yticks( np.arange(ym_c[0], ym_c[1] + 1.0e-3, ym_c[2]) ) # y ticks
-        ax1.text(0.45, 1.07, r'$t = %4.1f \mathrm{s}$'%(t_p), verticalalignment = 'center_baseline', transform = ax1.transAxes)
+        ax1.text(0.45, 1.07, r'$t = %4.1f \,\mathrm{s}$'%(t_p), verticalalignment = 'center_baseline', transform = ax1.transAxes)
 
         c_plt = np.loadtxt(ddir_ani + 'data%5.5d.dat'%(i), usecols = 2, dtype = 'float32')
         c_plt = c_plt.reshape([nxi[1] + 1, -1]) # Reshape loaded data into 2D array. y and x grid points. -1: automatically determined
@@ -178,7 +208,7 @@ class mk_animation:
             axpos = ax1.get_position() # Get ax1 position. x0: left, x1: right, y0: bottom, y1: top, height: height
             pp_ax = fig.add_axes([axpos.x1 + 0.02, axpos.y0, 0.03, axpos.height]) # Color bar left bottom x and y, width, height
             pp = fig.colorbar(im, ax = ax1, orientation = "vertical", cax = pp_ax, extend = extend_ani)
-            pp.ax.yaxis.set_tick_params(pad = tpad, right = False, which = "both")
+            pp.ax.yaxis.set_tick_params(pad = tpad, right = False, which = "minor")
             pp.set_ticks( np.arange(vm1[0], vm1[1] + 1.e-3, vm1[2]) ) # Color bar ticks
             # pp.set_ticklabels([cticks[0], cticks[1], cticks[2], r'$c_\mathrm{c}$', cticks[4]]) # Put text in ticks
             pp.set_label(lc, labelpad = lpad, loc = 'center', rotation = 90)  # Color bar label, rotate with rotation (Default: 90)
@@ -193,22 +223,67 @@ class mk_animation:
         ani = animation.FuncAnimation(fig, self.update_single_cmap, fargs = (ax1, fig), interval = ani_t*1000/(nt_p - 1), frames = nt_p)
         ani.save(plotdir + '04plot_ani_single' + ext_ani, writer = 'ffmpeg')
 
-    def update_multiple(self):
+    def update_multiple(self, i, ax1, fig):
         global cbar_initialized
+        t_p = dt_p*i + 1.0e-8
+        ax1.cla()
+        ax1.set_aspect('equal') # Follow aspect ratio
+        ax1.set_xlabel(lx, labelpad = lpad) # Axis label
+        ax1.set_ylabel(ly, labelpad = lpad)
+        ax1.tick_params(axis = 'both', pad = tpad)
+        ax1.set_xlim(xm_c[0], xm_c[1]) # Range of axis
+        ax1.set_ylim(ym_c[0], ym_c[1])
+        ax1.set_xticks( np.arange(xm_c[0], xm_c[1] + 1.0e-3, xm_c[2]) ) # x ticks in xm[2] increments from xm[0] to xm[1]
+        ax1.set_yticks( np.arange(ym_c[0], ym_c[1] + 1.0e-3, ym_c[2]) ) # y ticks
+        ax1.text(0.45, 1.07, r'$t = %4.1f \,\mathrm{s}$'%(t_p), verticalalignment = 'center_baseline', transform = ax1.transAxes)
+
+        c_plt = np.loadtxt(ddir_ani + 'data%5.5d.dat'%(i), usecols = 2, dtype = 'float32')
+        c_plt = alpha_t(c_plt, t_p)
+        c_plt = c_plt.reshape([nxi[1] + 1, -1])    # Reshape loaded data into 2D array. y and x grid points. -1: automatically determined
+        im = ax1.imshow(c_plt,                     # c_plt is 2D array
+                        interpolation = 'bicubic', # Interpolation (bilinear, none, etc.)
+                        extent = extent1, 
+                        cmap = mycmap2,            # Color map type
+                        origin = 'lower',          # Set origin lower
+                        norm = LogNorm(vmin = vm2[0], vmax = vm2[1]) # Log scale
+                        )
+
+        if not cbar_initialized:
+            cbar_initialized = True ### Important for color map animation! 
+            axpos = ax1.get_position() # Get ax1 position. x0: left, x1: right, y0: bottom, y1: top, height: height
+            pp_ax = fig.add_axes([axpos.x1 + 0.02, axpos.y0, 0.03, axpos.height]) # Color bar left bottom x and y, width, height
+            pp = fig.colorbar(im, ax = ax1, orientation = "vertical", cax = pp_ax, extend = extend_ani2)
+            pp.ax.yaxis.set_tick_params(pad = tpad, right = False, which = "minor")
+            pp.ax.tick_params(axis = 'y', length = tck_s1*0.8, width = alw, direction = 'inout')
+            pp.set_ticks(c2_t) # Color bar ticks
+            pp.set_ticklabels(c2_tl) # Color bar tick labels
+            pp.set_label(lc2, labelpad = lpad, loc = 'center', rotation = 90)  # Color bar label, rotate with rotation (Default: 90)
 
     def ani_multiple(self): ### Multiple
         fig = plt.figure(figsize = (16.0*figs_ani, 9.0*figs_ani), dpi = 100, linewidth = 0)
+        ax1 = fig.add_subplot(111)
+        chartB = ax1.get_position()
+        ax1.set_position([chartB.x0, chartB.y0, chartB.width*0.88, chartB.height]) # Graph position and size
+
+        ani_t = tmax*2.0 # Animation time
+        ani = animation.FuncAnimation(fig, self.update_multiple, fargs = (ax1, fig), interval = ani_t*1000/(nt_p - 1), frames = nt_p)
+        ani.save(plotdir + '04plot_ani_multiple' + ext_ani, writer = 'ffmpeg')
 
 ##=================== main ===================##
 if __name__ == '__main__':
-    print("start main")
+    minute = int((time.time() - start)/60)
+    print(minute, 'm%6.2fs, start main '%(time.time() - start - minute*60.0))
     print("datadir: ", datadir, ", plotdir: ", plotdir, ", ctxt: ", ctxt1)
     print('c_plt min', it_m[0], cxy_m[0], ', max', it_m[1], cxy_m[1])
     sns_set(fs1, tck_s1, alw, ctxt1)
+
     cbar_initialized = False
     mk_animation().ani_single_cmap()
-    # cbar_initialized = False
-    # mk_animation().ani_multiple()
+    minute = int((time.time() - start)/60)
+    print(minute, 'm%6.2fs, end animation 1 '%(time.time() - start - minute*60.0))
+
+    cbar_initialized = False
+    mk_animation().ani_multiple()
 
     if fshow == 1:
         plt.show()
