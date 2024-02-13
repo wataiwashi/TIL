@@ -35,11 +35,13 @@ ddir_ani, ext_ani = datadir + ddir_ani + '/', '.' + ext_ani
 nt_p = 51 # number of time step
 tmax = 10.0
 dt_p = tmax/(nt_p - 1) # time per step
-nxi  = np.array([64, 32])    # Number of x and y data
+nxi  = np.array([128, 64])    # Number of x and y data
 Lxi  = np.array([4.0, 2.0]) # Max of x and y
 dxi  = Lxi/nxi              # Grid length
 ### Create data. Can comment out if data files exist
 # os.makedirs(ddir_ani, exist_ok = True) # Make data animation dir
+# dfile = ddir_ani + 'data_xy.dat'
+# f2 = open(dfile, 'w')
 # for it in range(nt_p):
 #     dfile   = ddir_ani + 'data%5.5d.dat'%(it)
 #     f = open(dfile, 'w')
@@ -48,8 +50,11 @@ dxi  = Lxi/nxi              # Grid length
 #         for i1 in range(nxi[0] + 1):
 #             x = dxi[0]*i1
 #             cxy = np.sin(2*math.pi*(y/Lxi[1] - x/Lxi[1] + it*dt_p/3.0))
-#             f.write('%8.3f %8.3f %8.3f\n'%(x, y, cxy))
+#             f.write('%8.3f\n'%(cxy))
+#             if it == 0:
+#                 f2.write('%8.3f %8.3f\n'%(x, y))
 #     f.close()
+# f2.close()
 
 if os.path.exists(datadir) == False:  # Cancel if datadir or plotdir does not exist
     sys.exit("datadir error: %s"%datadir)
@@ -58,9 +63,9 @@ if os.path.exists(plotdir) == False:
     sys.exit("plotdir error: %s"%plotdir)
 
 ### Load text file
-x1  = np.loadtxt(ddir_ani + 'data%5.5d.dat'%(0), usecols = 0, dtype = 'float32') # usecols: column number, dtype (float32: single precision, float64: double precision, int64: integer, etc.)
-y1  = np.loadtxt(ddir_ani + 'data%5.5d.dat'%(0), usecols = 1, dtype = 'float32')
-cxy0= np.loadtxt(ddir_ani + 'data%5.5d.dat'%(0), usecols = 2, dtype = 'float32')
+x1  = np.loadtxt(ddir_ani + 'data_xy.dat',       usecols = 0, dtype = 'float32') # usecols: column number, dtype (float32: single precision, float64: double precision, int64: integer, etc.)
+y1  = np.loadtxt(ddir_ani + 'data_xy.dat',       usecols = 1, dtype = 'float32')
+cxy0= np.loadtxt(ddir_ani + 'data%5.5d.dat'%(0), usecols = 0, dtype = 'float32')
 x1  =  x1.reshape([nxi[1] + 1, -1]) # Reshape loaded data into 2D array. y and x grid points. -1: automatically determined
 y1  =  y1.reshape([nxi[1] + 1, -1]) # Reshape loaded data into 2D array. y and x grid points. -1: automatically determined
 
@@ -95,13 +100,13 @@ if hide_ani_cmap == 1: ### Setting for color map animation
     it_m, cxy_m = [0, 0], [np.nanmin(cxy0), np.nanmax(cxy0)]
     extend_ani2 = 'neither'
     for it in range(nt_p):
-        cxy  = np.loadtxt(ddir_ani + 'data%5.5d.dat'%(it), usecols = 2, dtype = 'float32')
+        cxy  = np.loadtxt(ddir_ani + 'data%5.5d.dat'%(it), usecols = 0, dtype = 'float32')
         if np.nanmin(cxy) < cxy_m[0]:
             it_m[0], cxy_m[0] = it, np.nanmin(cxy)
         if np.nanmax(cxy) > cxy_m[1]:
             it_m[1], cxy_m[1] = it, np.nanmax(cxy)
 
-        cxy2 = np.loadtxt(ddir_ani + 'data%5.5d.dat'%(it), usecols = 2, dtype = 'float32')
+        cxy2 = np.loadtxt(ddir_ani + 'data%5.5d.dat'%(it), usecols = 0, dtype = 'float32')
         cxy2 = alpha_t(cxy2, dt_p*it)
         if extend_ani2 == 'neither':
             if vm2[0] > np.nanmin(cxy2):
@@ -195,7 +200,7 @@ class mk_animation:
         ax1.set_yticks( np.arange(ym_c[0], ym_c[1] + 1.0e-3, ym_c[2]) ) # y ticks
         ax1.text(0.45, 1.07, r'$t = %4.1f \,\mathrm{s}$'%(t_p), verticalalignment = 'center_baseline', transform = ax1.transAxes)
 
-        c_plt = np.loadtxt(ddir_ani + 'data%5.5d.dat'%(i), usecols = 2, dtype = 'float32')
+        c_plt = np.loadtxt(ddir_ani + 'data%5.5d.dat'%(i), usecols = 0, dtype = 'float32')
         c_plt = c_plt.reshape([nxi[1] + 1, -1]) # Reshape loaded data into 2D array. y and x grid points. -1: automatically determined
         im = ax1.imshow(c_plt,                     # c_plt is 2D array
                         interpolation = 'bicubic', # Interpolation (bilinear, none, etc.)
@@ -220,7 +225,7 @@ class mk_animation:
         chartB = ax1.get_position()
         ax1.set_position([chartB.x0, chartB.y0, chartB.width*0.88, chartB.height]) # Graph position and size
 
-        ani_t = tmax # Animation time
+        ani_t = tmax*1.5 # Animation time
         ani = animation.FuncAnimation(fig, self.update_single_cmap, fargs = (ax1, fig), interval = ani_t*1000/(nt_p - 1), frames = nt_p)
         ani.save(plotdir + '04plot_ani_single' + ext_ani, writer = 'ffmpeg')
 
@@ -242,13 +247,13 @@ class mk_animation:
             axc[i1].set_yticks( np.arange(ym_c[0], ym_c[1] + 1.0e-3, ym_c[2]) ) # y ticks
 
             if i1 == 0:
-                c_plt = np.loadtxt(ddir_ani + 'data%5.5d.dat'%(i), usecols = 2, dtype = 'float32')
+                c_plt = np.loadtxt(ddir_ani + 'data%5.5d.dat'%(i), usecols = 0, dtype = 'float32')
                 norm1 = Normalize(vmin = vm1[0], vmax = vm1[1])
                 cm_ml = mycmap1
                 p_arr1 = np.arange(vm1[0], vm1[1] + 1.e-5, vm1[2])
                 pp_list = [extend_ani, p_arr1, np.round(p_arr1, 3), lc]
             else:
-                c_plt = np.loadtxt(ddir_ani + 'data%5.5d.dat'%(i), usecols = 2, dtype = 'float32')
+                c_plt = np.loadtxt(ddir_ani + 'data%5.5d.dat'%(i), usecols = 0, dtype = 'float32')
                 c_plt = alpha_t(c_plt, t_p)
                 norm1 = LogNorm(vmin = vm2[0], vmax = vm2[1]) # Log scale
                 cm_ml = mycmap2
@@ -278,14 +283,14 @@ class mk_animation:
             ax_l[i1].cla()
             if i1 == 0:
                 ax_l[i1].set_xlabel(lx, labelpad = lpad) # Axis label
-                ax_l[i1].set_ylabel(r'$\tilde{c}_\mathrm{a} (x=0,y,t)$', labelpad = lpad)
+                ax_l[i1].set_ylabel(r'$\tilde{c}_\mathrm{a} (x,y=0,t)$', labelpad = lpad)
                 ax_l[i1].set_xlim(xm_c[0], xm_c[1])
                 ax_l[i1].set_ylim(-1.1,    1.1)
                 ax_l[i1].set_xticks( np.arange(xm_c[0], xm_c[1] + 1.0e-3, xm_c[2]) )
                 ax_l[i1].plot(x1[0, :], c_plt[0, :], lw = 1.5*fs1, c = 'black')
             else:
                 ax_l[i1].set_xlabel(ly, labelpad = lpad)
-                ax_l[i1].set_ylabel(r'$\alpha(x,y=0,t)$', labelpad = lpad)
+                ax_l[i1].set_ylabel(r'$\alpha(x=0,y,t)$', labelpad = lpad)
                 ax_l[i1].set_xlim(ym_c[0], ym_c[1])
                 ax_l[i1].set_xticks( np.arange(ym_c[0], ym_c[1] + 1.0e-3, ym_c[2]) )
                 ax_l[i1].set_yscale('log') ### log scale y axis
@@ -304,7 +309,7 @@ class mk_animation:
         ax_l_s = 0.75
         for i in range(len(ax_l)):
             chartB = ax_l[i].get_position()
-            ax_l[i].set_position([chartB.x0 + 0.07, chartB.y0 + chartB.height*(1.0 - ax_l_s)/2.0, chartB.width*ax_l_s, chartB.height*ax_l_s]) # Graph position and size
+            ax_l[i].set_position([chartB.x0 + 0.10, chartB.y0 + chartB.height*(1.0 - ax_l_s)/2.0, chartB.width*ax_l_s, chartB.height*ax_l_s]) # Graph position and size
 
         axc_1 = fig.add_subplot(2, 2, 1)
         axc_2 = fig.add_subplot(2, 2, 3)
