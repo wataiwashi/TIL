@@ -15,6 +15,7 @@
 - [04 Animation plot](https://github.com/wataiwashi/TIL/blob/master/python/04plot_animation.py)
     - <a href="https://youtu.be/mn7RYg5YDnU" target="_blank" rel="noopener noreferrer">YouTube link: 04plot_ani_single.mov</a> (single colormap animation)
     - <a href="https://youtu.be/GvQQ3AjV2rQ" target="_blank" rel="noopener noreferrer">YouTube link: 04plot_ani_multiple.mov</a> (multiple colormap animation)
+- [05 Binary data plot](https://github.com/wataiwashi/TIL/blob/master/python/05plot_binary.py)
 
 ### [data/][data-l] directry
 There are data files (`dat` files). 
@@ -25,6 +26,5 @@ There are plot results (`pdf` and `mov` files).
 
 ## To be updated
 - 3D plot
-- Binary read
 
 [data-l]: https://github.com/wataiwashi/TIL/tree/master/python/data
