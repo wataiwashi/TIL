@@ -27,34 +27,44 @@ ext_ani = 'mov'  # Animation extension (mov, mp4, etc.)
 plotdir = 'plot' # Plot file save directry
 
 datadir = 'data'
-ddir_ani = '04animation'
+ddir_b  = '05binary'
 plotdir, datadir, ext = plotdir + '/', datadir + '/', '.' + ext
-ddir_ani, ext_ani = datadir + ddir_ani + '/', '.' + ext_ani
+ddir_b, ext_ani = datadir + ddir_b + '/', '.' + ext_ani
 
 ### Data for plot
-nt_p = 51 # number of time step
+nt_p = 101 # number of time step
 tmax = 10.0
 dt_p = tmax/(nt_p - 1) # time per step
-nxi  = np.array([128, 64])    # Number of x and y data
+nxi  = np.array([2, 1])*64    # Number of x and y data
 Lxi  = np.array([4.0, 2.0]) # Max of x and y
 dxi  = Lxi/nxi              # Grid length
-### Create data. Can comment out if data files exist
-# os.makedirs(ddir_ani, exist_ok = True) # Make data animation dir
-# dfile = ddir_ani + 'data_xy.dat'
-# f2 = open(dfile, 'w')
-# for it in range(nt_p):
-#     dfile   = ddir_ani + 'data%5.5d.dat'%(it)
-#     f = open(dfile, 'w')
-#     for i2 in range(nxi[1] + 1):
-#         y = dxi[1]*i2
-#         for i1 in range(nxi[0] + 1):
-#             x = dxi[0]*i1
-#             cxy = np.sin(2*math.pi*(y/Lxi[1] - x/Lxi[1] + it*dt_p/3.0))
-#             f.write('%8.3f\n'%(cxy))
-#             if it == 0:
-#                 f2.write('%8.3f %8.3f\n'%(x, y))
-#     f.close()
-# f2.close()
+nxny = (nxi[0] + 1)*(nxi[1] + 1)
+
+flag_data = 0 ### flag_data=1 to create data
+if flag_data == 1:
+    os.makedirs(ddir_b, exist_ok = True) # Make data animation dir
+    f = open(ddir_b + 'data_c_b.dat', 'wb')
+    x = np.zeros([nxi[1] + 1, nxi[0] + 1])
+    y = np.zeros([nxi[1] + 1, nxi[0] + 1])
+    t_c00 = np.empty([2, nt_p])
+    for it in range(nt_p):
+        cxy = np.zeros([nxi[1] + 1, nxi[0] + 1])
+        if it == 0:
+            for i2 in range(nxi[1] + 1):
+                for i1 in range(nxi[0] + 1):
+                    x[i2, i1] = dxi[0]*i1
+                    y[i2, i1] = dxi[1]*i2
+        cxy = np.sin(2*math.pi*(y/Lxi[1] - x/Lxi[1] + it*dt_p/3.0))
+        f.write(cxy.astype(np.float32)) # single precision
+        t_c00[0, it] = it*dt_p
+        t_c00[1, it] = cxy[0, 0]
+    f.close()
+    f = open(ddir_b + 'data_xy_b.dat', 'wb')
+    f.write(x.astype(np.float32)); f.write(y.astype(np.float32))
+    f.close()
+    f = open(ddir_b + 'data_t_c00_b.dat', 'wb')
+    f.write(t_c00[0].astype(np.float32)); f.write(t_c00[1].astype(np.float32))
+    f.close()
 
 if os.path.exists(datadir) == False:  # Cancel if datadir or plotdir does not exist
     sys.exit("datadir error: %s"%datadir)
@@ -62,12 +72,22 @@ os.makedirs(plotdir, exist_ok = True) # Make plotdir
 if os.path.exists(plotdir) == False:
     sys.exit("plotdir error: %s"%plotdir)
 
-### Load text file
-x1  = np.loadtxt(ddir_ani + 'data_xy.dat',       usecols = 0, dtype = 'float32') # usecols: column number, dtype (float32: single precision, float64: double precision, int64: integer, etc.)
-y1  = np.loadtxt(ddir_ani + 'data_xy.dat',       usecols = 1, dtype = 'float32')
-cxy0= np.loadtxt(ddir_ani + 'data%5.5d.dat'%(0), usecols = 0, dtype = 'float32')
-x1  =  x1.reshape([nxi[1] + 1, -1]) # Reshape loaded data into 2D array. y and x grid points. -1: automatically determined
-y1  =  y1.reshape([nxi[1] + 1, -1]) # Reshape loaded data into 2D array. y and x grid points. -1: automatically determined
+### Set data type to read binary file
+def set_chunk(fname, cnt_chunk, dtype_chunk):
+    fd = open(fname, "r")
+    chunk = np.fromfile(fd, dtype = dtype_chunk, count = cnt_chunk)
+    fd.close()
+    return chunk
+dtype_xy = np.dtype([('x', '<%if4'%nxny), ('y', '<%if4'%nxny)])
+dtype_c  = np.dtype([('c', '<%if4'%nxny)])
+dtype_tc = np.dtype([('t', '<%if4'%nt_p), ('c00', '<%if4'%nt_p)])
+### Load binary file
+chunk  = set_chunk(ddir_b + 'data_xy_b.dat', 1,    dtype_xy)
+x1, y1 = chunk[0]['x'], chunk[0]['y']
+chunk = set_chunk(ddir_b + 'data_c_b.dat',  nt_p, dtype_c)
+cxy0  = chunk[0]['c']
+x1 = x1.reshape([nxi[1] + 1, -1]) # Reshape loaded data into 2D array. y and x grid points. -1: automatically determined
+y1 = y1.reshape([nxi[1] + 1, -1])
 
 ### Setting of size, label, etc.
 lx, ly, lc = r'$x/L_0$', r'$y/L_0$', r'$\tilde{c}_\mathrm{a}(x,y,t)$' # Use TeX character with r''
@@ -87,7 +107,7 @@ else:
     lpad = 11
     tpad = 11
 
-vm1 = [-1.0, 0.6] # Range of color bar
+vm1 = [-1.0, 1.0] # Range of color bar
 vm1.append( (vm1[1] - vm1[0])/4.0 )
 vm2 = [math.sqrt(10.0)*1.0e-2, math.sqrt(10.0)*1.0e2] # Range of color bar
 
@@ -99,14 +119,15 @@ hide_ani_cmap = 1 ### Must be 1
 if hide_ani_cmap == 1: ### Setting for color map animation
     it_m, cxy_m = [0, 0], [np.nanmin(cxy0), np.nanmax(cxy0)]
     extend_ani2 = 'neither'
+    chunk = set_chunk(ddir_b + 'data_c_b.dat',  nt_p, dtype_c)
     for it in range(nt_p):
-        cxy  = np.loadtxt(ddir_ani + 'data%5.5d.dat'%(it), usecols = 0, dtype = 'float32')
+        cxy  = chunk[it]['c']
         if np.nanmin(cxy) < cxy_m[0]:
             it_m[0], cxy_m[0] = it, np.nanmin(cxy)
         if np.nanmax(cxy) > cxy_m[1]:
             it_m[1], cxy_m[1] = it, np.nanmax(cxy)
 
-        cxy2 = np.loadtxt(ddir_ani + 'data%5.5d.dat'%(it), usecols = 0, dtype = 'float32')
+        cxy2 = chunk[it]['c']
         cxy2 = alpha_t(cxy2, dt_p*it)
         if extend_ani2 == 'neither':
             if vm2[0] > np.nanmin(cxy2):
@@ -144,7 +165,7 @@ if hide_define_cmap == 1: ### Define and create cmap
     cmap1 = 'viridis'
     ### Create original cmap
     #### Intermittent change
-    cnmax = 10
+    cnmax = 30
     cim = cm.get_cmap('Blues', cnmax) # Create data 'Blues' divided into cnmax
     clist = [cim(0)]
     for i in range(1, cim.N):
@@ -186,7 +207,7 @@ def sns_set(fs, tck_s, alw, ctxt):
     )
 
 class mk_animation:
-    def update_single_cmap(self, i, ax1, fig):
+    def update_single_cmap(self, i, ax1, fig, chunk):
         global cbar_initialized
         t_p = dt_p*i + 1.0e-6
         ax1.cla()
@@ -200,7 +221,7 @@ class mk_animation:
         ax1.set_yticks( np.arange(ym_c[0], ym_c[1] + 1.0e-3, ym_c[2]) ) # y ticks
         ax1.text(0.45, 1.07, r'$t = %4.1f \,\mathrm{s}$'%(t_p), verticalalignment = 'center_baseline', transform = ax1.transAxes)
 
-        c_plt = np.loadtxt(ddir_ani + 'data%5.5d.dat'%(i), usecols = 0, dtype = 'float32')
+        c_plt = chunk[i]['c']
         c_plt = c_plt.reshape([nxi[1] + 1, -1]) # Reshape loaded data into 2D array. y and x grid points. -1: automatically determined
         im = ax1.imshow(c_plt,                     # c_plt is 2D array
                         interpolation = 'bicubic', # Interpolation (bilinear, none, etc.)
@@ -226,10 +247,11 @@ class mk_animation:
         ax1.set_position([chartB.x0, chartB.y0, chartB.width*0.88, chartB.height]) # Graph position and size
 
         ani_t = tmax*1.5 # Animation time
-        ani = animation.FuncAnimation(fig, self.update_single_cmap, fargs = (ax1, fig), interval = ani_t*1000/(nt_p - 1), frames = nt_p)
-        ani.save(plotdir + '04plot_ani_single' + ext_ani, writer = 'ffmpeg')
+        chunk = set_chunk(ddir_b + 'data_c_b.dat',  nt_p, dtype_c)
+        ani = animation.FuncAnimation(fig, self.update_single_cmap, fargs = (ax1, fig, chunk), interval = ani_t*1000/(nt_p - 1), frames = nt_p)
+        ani.save(plotdir + '05plot_ani_b_single' + ext_ani, writer = 'ffmpeg')
 
-    def update_multiple(self, i, ax0, ax_l, axc, fig):
+    def update_multiple(self, i, ax0, ax_l, axc, fig, chunk):
         global cbar_initialized
         t_p = dt_p*i + 1.0e-8
         ax0.cla()
@@ -246,15 +268,15 @@ class mk_animation:
             axc[i1].set_xticks( np.arange(xm_c[0], xm_c[1] + 1.0e-3, xm_c[2]) ) # x ticks in xm[2] increments from xm[0] to xm[1]
             axc[i1].set_yticks( np.arange(ym_c[0], ym_c[1] + 1.0e-3, ym_c[2]) ) # y ticks
 
+            c_read = chunk[i]['c']
             if i1 == 0:
-                c_plt = np.loadtxt(ddir_ani + 'data%5.5d.dat'%(i), usecols = 0, dtype = 'float32')
+                c_plt = c_read
                 norm1 = Normalize(vmin = vm1[0], vmax = vm1[1])
                 cm_ml = mycmap1
                 p_arr1 = np.arange(vm1[0], vm1[1] + 1.e-5, vm1[2])
                 pp_list = [extend_ani, p_arr1, np.round(p_arr1, 3), lc]
             else:
-                c_plt = np.loadtxt(ddir_ani + 'data%5.5d.dat'%(i), usecols = 0, dtype = 'float32')
-                c_plt = alpha_t(c_plt, t_p)
+                c_plt = alpha_t(c_read, t_p)
                 norm1 = LogNorm(vmin = vm2[0], vmax = vm2[1]) # Log scale
                 cm_ml = mycmap2
                 pp_list = [extend_ani2, c2_t, c2_tl, lc2]
@@ -296,7 +318,10 @@ class mk_animation:
                 ax_l[i1].set_yscale('log') ### log scale y axis
                 ax_l[i1].set_ylim(vm2[0],  vm2[1])
                 ax_l[i1].set_yticks(c2_t, c2_tl)
-                ax_l[i1].plot(y1[:, 0], c_plt[:, 0], lw = 1.5*fs1)
+                ax_l[i1].plot(y1[:, 0], c_plt[:, 0], lw = 1.5*fs1, zorder = 3)
+                ax_l[i1].fill_between(y1[:, 0], 1.0, c_plt[:, 0], color = 'C1', alpha = 0.3, zorder = 2)
+                ax_l[i1].axhspan(1.0, 10.0, color = 'grey', alpha = 0.3, zorder = 1)
+                ax_l[i1].axvspan(3.5 - 2.0*t_p/3.0, 4.5 - 2.0*t_p/3.0,  color = 'C4', alpha = 0.2, zorder = 0)
             ax_l[i1].tick_params(axis = 'both', pad = tpad)
 
     def ani_multiple(self): ### Multiple
@@ -319,8 +344,37 @@ class mk_animation:
             axc[i].set_position([chartB.x0 - 0.03, chartB.y0, chartB.width*0.85, chartB.height]) # Graph position and size
 
         ani_t = tmax*2.5 # Animation time
-        ani = animation.FuncAnimation(fig, self.update_multiple, fargs = (ax0, ax_l, axc, fig), interval = ani_t*1000/(nt_p - 1), frames = nt_p)
-        ani.save(plotdir + '04plot_ani_multiple' + ext_ani, writer = 'ffmpeg')
+        chunk = set_chunk(ddir_b + 'data_c_b.dat',  nt_p, dtype_c)
+        ani = animation.FuncAnimation(fig, self.update_multiple, fargs = (ax0, ax_l, axc, fig, chunk), interval = ani_t*1000/(nt_p - 1), frames = nt_p)
+        ani.save(plotdir + '05plot_ani_b_multiple' + ext_ani, writer = 'ffmpeg')
+
+class line_plot:
+    def t_c00_plot(self):
+        fig = plt.figure(figsize = (3.6*figs, 2.4*figs), dpi = 100, linewidth = 0)
+        ax1 = fig.add_subplot(111)
+        ax1.set_xlabel(r'$t \, [\mathrm{s}]$',                labelpad = lpad)
+        ax1.set_ylabel(r'$\tilde{c}_\mathrm{a} (x=0,y=0,t)$', labelpad = lpad)
+        ax1.set_xlim(0,    tmax)
+        ax1.set_ylim(-1.1, 1.1)
+        ax1.tick_params(axis = 'x', pad = tpad)
+        ax1.tick_params(axis = 'y', pad = tpad)
+
+        chunk = set_chunk(ddir_b + 'data_t_c00_b.dat', 1, dtype_tc)
+        t_plt   = chunk[0]['t']
+        c00_plt = chunk[0]['c00']
+        ax1.plot(t_plt, c00_plt, lw = 1.5*fs1, ls = 'solid', color = 'black', 
+                alpha = 0.8, 
+                clip_on = False, 
+                zorder = 3, 
+                label = 'c00')
+        ax1.fill_between(t_plt, 0.0, c00_plt, color = 'C1', alpha = 0.3, zorder = 2)
+        ax1.axhspan(0.0, 0.3, color = 'grey', alpha = 0.3, zorder = 1)
+        ax1.axvspan(3.0, 6.0, color = 'C2',   alpha = 0.2, zorder = 0)
+
+        # h1, l1 = ax1.get_legend_handles_labels()
+        # ax1.legend( h1, l1, bbox_to_anchor = (1.0, 1.0), loc = "upper left", framealpha = 1.0, 
+        #             fancybox = False, edgecolor = "black").get_frame().set_linewidth(alw*0.8)
+        fig.savefig(plotdir + "05plot_c00_t" + ext, bbox_inches = "tight")
 
 ##=================== main ===================##
 if __name__ == '__main__':
@@ -337,6 +391,8 @@ if __name__ == '__main__':
 
     cbar_initialized = False
     mk_animation().ani_multiple()
+
+    line_plot().t_c00_plot()
 
     if fshow == 1:
         plt.show()
