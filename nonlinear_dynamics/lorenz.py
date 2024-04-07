@@ -11,7 +11,7 @@ import sys
 fshow = 1 # Display popup 0: no, 1: yes
 ### Output setting
 fsize = 0   # 0: small size for paper, 1: large size for talk
-ext = 'pdf' # File extension (pdf, svg, png, etc.)
+ext = 'svg' # File extension (pdf, svg, png, etc.)
 plotdir = 'plot' # Plot file save directry
 
 datadir = 'data'
@@ -55,7 +55,7 @@ t_plt2, xyz_plt2 = lorenz(0.0, 0.10001, 0.0, tmax, dt_plt)
 
 hide_0 = 1 ### Must be 1
 if hide_0 == 1: ### Setting of size, label, etc. 
-    lx, ly, lz = r'$X$', r'$Y$', r'$Z$' # Use TeX character with r''
+    lt, lx, ly, lz = r'$t$', r'$X$', r'$Y$', r'$Z$' # Use TeX character with r''
     if fsize == 0:
         figs = 1.
         fs1, lw1, ms1 = 1., 1.2, 6.
@@ -97,7 +97,7 @@ def plot_y():
     ax1.spines["bottom"].set_linewidth(alw)
     ax1.spines["right"].set_linewidth(alw)
 
-    ax1.set_xlabel(lx, labelpad = lpad[0]) # Axis label
+    ax1.set_xlabel(lt, labelpad = lpad[0]) # Axis label
     ax1.set_ylabel(ly, labelpad = lpad[1])
     xm = [0.0, tmax]
     ax1.set_xlim(xm[0], xm[1]) # Range of axis
@@ -121,14 +121,15 @@ def plot_xyz():
     ax1.set_ylabel(ly)
     ax1.set_zlabel(lz)
 
+    ax1.scatter(xyz_plt1[0, 0], xyz_plt1[1, 0], xyz_plt1[2, 0], marker = '*', c = 'red')
     ax1.plot(xyz_plt1[0], xyz_plt1[1], xyz_plt1[2], lw = lw1*0.25, ls = 'solid', color = 'C0', alpha = 1.0, clip_on = False, zorder = 8, label = r'$y_0=%10.5f$'%xyz_plt1[1, 0])
-    # ax1.plot(xyz_plt2[0], xyz_plt2[1], xyz_plt2[2], lw = lw1, ls = 'solid', color = 'C1', alpha = 0.8, clip_on = False, zorder = 8, label = r'$y_0=%10.5f$'%xyz_plt2[1, 0])
+    # ax1.plot(xyz_plt2[0], xyz_plt2[1], xyz_plt2[2], lw = lw1*0.25, ls = 'solid', color = 'C1', alpha = 0.7, clip_on = False, zorder = 8, label = r'$y_0=%10.5f$'%xyz_plt2[1, 0])
 
     ### Legend
     # h1, l1 = ax1.get_legend_handles_labels()
     # ax1.legend(h1, l1, bbox_to_anchor = (1.0, 1.0), loc = "upper left", framealpha = 1.0, fancybox=False, edgecolor = "black").get_frame().set_linewidth(alw*0.8)
     ### save
-    fig.savefig(plotdir + 'lorenz.jpg', dpi = 600, bbox_inches = 'tight', pad_inches = 0.4)
+    fig.savefig(plotdir + 'lorenz.jpg', dpi = 600, bbox_inches = 'tight', pad_inches = 0.3)
 
 ##=================== main ===================##
 if __name__ == '__main__':
