@@ -4,7 +4,8 @@
 1. Go to Download directry in terminal. 
     - `chmod a+x softwarename.AppImage`
     - Test launch with `./software.AppImage`
-      - If core dump, try it with `--in-process-gpu` option. 
+      - If core dump, try it with `--in-process-gpu` option.
+      - If core dump again, try it with `--no-sandbox` option. (Ubuntu 24.04)
 
 ## Add to launcher
 1. Move AppImage file to certain directry, e.g, `/opt/softwarename/`. 
