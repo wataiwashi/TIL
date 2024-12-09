@@ -5,6 +5,7 @@ Lorenz sync
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import math
 import os
 import sys
 
@@ -26,8 +27,8 @@ sigma = 10.0
 b = 8.0/3.0
 r = 28.0
 # r = 0.8
-dt = 1.0e-4
-tmax, dt_plt = 50.0, 0.5e-2
+dt = 5.0e-6
+tmax, dt_plt = 50.0, 1.0e-5
 tmin = 30.0
 
 def lorenz(x0, y0, z0, tmax, dt_plt):
@@ -95,13 +96,12 @@ def sns_set(fs, tck_s, alw, ctxt):
     sns.set(
         context = ctxt,  # Fontsize, linewidth ('paper' or 'talk')
         palette = sns.color_palette("colorblind"),
-        font = "serif",       # Font
-        font_scale = fs,  # Font scale (Changing this to further tweak preset determined by context)
+        font = "serif", 
+        font_scale = fs, 
         style = None, 
-        # style = "whitegrid",   # White background with grid
         rc = {
-        # 'text.usetex': True, 
-        # 'text.latex.preamble' : r'\usepackage{txfonts}',   # LaTeX preamble, txfonts: nature font
+        'text.usetex': True, 
+        'text.latex.preamble' : r'\usepackage{txfonts}\usepackage{bm}',   # LaTeX preamble, txfonts: nature font
         'grid.linestyle': '--', 'grid.linewidth': 0, 
         "xtick.direction":"in", "xtick.major.width":0.8*alw, "xtick.major.size":tck_s, 
         "ytick.direction":"in", "ytick.major.width":0.8*alw, "ytick.major.size":tck_s, 
@@ -121,6 +121,18 @@ def set_ticks_digit(arr_in):
             j = j - 1
         lis_out[i] = lis_out[i] + r'$'
     return lis_out
+def set_ticks_digit_log(arr_min_max):
+    int_log_min_max = [ math.ceil( np.log10(arr_min_max[0]) - 1.0e-6 ), math.floor( np.log10(arr_min_max[-1]) + 1.0e-6 ) ]
+    lis_out = []; arr_out = np.empty(0)
+    for i in range(int_log_min_max[0], int_log_min_max[1] + 1):
+        arr_out = np.append(arr_out, 10**i)
+        if i == 0:
+            lis_out.append( r'$1$' )  # Set 10^0 as 1
+        elif i == 1:
+            lis_out.append( r'$10$' ) # Set 10^1 as 10
+        else:
+            lis_out.append( r'$10^{%d}$'%(i) )
+    return arr_out, lis_out
 
 def plot_y():
     fig = plt.figure(figsize = (4.8*figs, 2.4*figs), dpi = 100, linewidth = 0)
@@ -138,9 +150,9 @@ def plot_y():
     ax1.tick_params(axis = 'x', pad = tpad[0])
     ax1.tick_params(axis = 'y', pad = tpad[1])
 
-    ax1.plot(t_plt1, xyz_plt1[1], lw = lw1, ls = 'solid', color = 'C0', alpha = 1.0, clip_on = False, zorder = 8, label = r'$v(t=30)=%6.3f$'%xyz_plt1[1, 0])
+    ax1.plot(t_plt1, xyz_plt1[1], lw = lw1, ls = 'solid', color = 'C0', alpha = 1.0, clip_on = False, zorder = 8, label = r'$v(t=%4.1f$'%tmin + r'$)=%5.2f$'%xyz_plt1[1, 0])
 
-    ax1.plot(t_plt2, xyz_plt2[1], lw = lw1*1.5, ls = 'solid', color = 'C1', alpha = 0.7, clip_on = False, zorder = 8, label = r'$v_r(t=30)=%6.3f$'%xyz_plt2[1, 0])
+    ax1.plot(t_plt2, xyz_plt2[1], lw = lw1*1.5, ls = 'solid', color = 'C1', alpha = 0.7, clip_on = False, zorder = 8, label = r'$v_r(t=%4.1f$'%tmin + r'$)=%5.2f$'%xyz_plt2[1, 0])
 
     ax1.scatter(t_plt1[0], xyz_plt1[1, 0], marker = 'o', s = 40, c = 'C0', clip_on = False, zorder = 10)
     ax1.scatter(t_plt2[0], xyz_plt2[1, 0], marker = 'o', s = 40, c = 'C1', clip_on = False, zorder = 10)
@@ -153,6 +165,32 @@ def plot_y():
     ax1.legend(h1, l1, bbox_to_anchor = (1.0, 1.0), loc = "upper left", framealpha = 1.0, fancybox=False, edgecolor = "black").get_frame().set_linewidth(alw*0.8)
     ## Save file
     fig.savefig(plotdir + "lorenz_sync" + ext, bbox_inches = "tight")
+
+def plot_error():
+    fig = plt.figure(figsize = (4.8*figs, 2.4*figs), dpi = 100, linewidth = 0)
+    ax1 = fig.add_subplot(111)
+    ax1.spines["top"].set_linewidth(alw)
+    ax1.spines["left"].set_linewidth(alw)
+    ax1.spines["bottom"].set_linewidth(alw)
+    ax1.spines["right"].set_linewidth(alw)
+
+    ax1.set_xlabel(lt, labelpad = lpad[0]) # Axis label
+    ax1.set_ylabel(r'$|\bm{e}|$', labelpad = lpad[1])
+    xm = [tmin, tmax]
+    ax1.set_xlim(xm[0], xm[1]) # Range of axis
+    ax1.set_yscale('log')
+    ax1.tick_params(axis = 'x', pad = tpad[0])
+    ax1.tick_params(axis = 'y', pad = tpad[1])
+
+    error = np.sqrt((xyz_plt1[0, :] - xyz_plt2[0, :])**2 + (xyz_plt1[1, :] - xyz_plt2[1, :])**2 + (xyz_plt1[2, :] - xyz_plt2[2, :])**2)
+    ax1.plot(t_plt1, error, lw = lw1, ls = 'solid', color = 'C0', alpha = 1.0, clip_on = False, zorder = 8, label = r'$v(t=30)=%6.3f$'%xyz_plt1[1, 0])
+
+    ax1.set_xticks(ax1.get_xticks(), set_ticks_digit(ax1.get_xticks()))
+    arr_yt, lis_y = set_ticks_digit_log(ax1.get_ylim())
+    ax1.set_yticks(arr_yt, lis_y)
+
+    ## Save file
+    fig.savefig(plotdir + "lorenz_sync_error" + ext, bbox_inches = "tight")
 
 def plot_xyz():
     fig = plt.figure(figsize = (3.6*figs, 2.4*figs), dpi = 100, linewidth = 0)
@@ -180,6 +218,7 @@ if __name__ == '__main__':
     sns_set(fs1, tck_s1, alw, ctxt1)
 
     plot_y()
+    plot_error()
     # plot_xyz()
 
     if fshow == 1:
