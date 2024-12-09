@@ -28,6 +28,7 @@ r = 28.0
 # r = 0.8
 dt = 1.0e-4
 tmax, dt_plt = 50.0, 0.5e-2
+tmin = 30.0
 
 def lorenz(x0, y0, z0, tmax, dt_plt):
     ntmax = int((tmax + 1.0e-8)/dt) + 1
@@ -45,24 +46,43 @@ def lorenz(x0, y0, z0, tmax, dt_plt):
             xyz_plt[:, i_p] = xyz[:]
             nt_plt = int((t + dt_plt + 1.0e-8)/dt)
         dot_xyz[0] = -sigma*xyz[0] + sigma*xyz[1]
-        dot_xyz[1] = -xyz[0]*xyz[2] + r*xyz[0] - xyz[1]
-        dot_xyz[2] = xyz[0]*xyz[1] - b*xyz[2]
+        dot_xyz[1] = r*xyz[0] - xyz[1] - 20.0*xyz[0]*xyz[2]
+        dot_xyz[2] = 5.0*xyz[0]*xyz[1] - b*xyz[2]
         xyz[:] = xyz[:] + dot_xyz[:]*dt
     return t_plt, xyz_plt
 
-t_plt1, xyz_plt1 = lorenz(0.0, 0.1, 0.0, tmax, dt_plt)
-t_plt2, xyz_plt2 = lorenz(0.0, 0.10001, 0.0, tmax, dt_plt)
+def lorenz_receive(x0, y0, z0, u_drive, tmin, tmax, dt_plt):
+    n_p = int((tmax + 1.0e-8)/dt_plt) + 1 - int(tmin/dt_plt + 1.0e-6)
+    t_plt = np.zeros(n_p)
+    xyz_plt = np.zeros((3, n_p))
+    xyz = np.array([x0, y0, z0])
+    dot_xyz = np.zeros(3)
+    for nt in range(n_p):
+        t = nt*dt_plt
+        i_p = int((t + 1.0e-8)/dt_plt)
+        t_plt[i_p] = t + tmin
+        xyz_plt[:, i_p] = xyz[:]
+
+        dot_xyz[0] = -sigma*xyz[0] + sigma*xyz[1]
+        dot_xyz[1] = r*u_drive[nt] - xyz[1] - 20.0*xyz[0]*xyz[2] # input u_drive
+        dot_xyz[2] = 5.0*xyz[0]*xyz[1] - b*xyz[2]
+        xyz[:] = xyz[:] + dot_xyz[:]*dt_plt
+    return t_plt, xyz_plt
+
+t_plt1, xyz_plt1 = lorenz(0.0, 1.0, 0.0, tmax, dt_plt)
+t_plt1, xyz_plt1 = t_plt1[int(tmin/dt_plt + 1.0e-6):], xyz_plt1[:, int(tmin/dt_plt + 1.0e-6):]
+t_plt2, xyz_plt2 = lorenz_receive(0.0, 0.01, 0.0, xyz_plt1[0], tmin, tmax, dt_plt)
 
 hide_0 = 1 ### Must be 1
 if hide_0 == 1: ### Setting of size, label, etc. 
-    lt, lx, ly, lz = r'$t$', r'$X$', r'$Y$', r'$Z$' # Use TeX character with r''
+    lt, lx, ly, lz = r'$t$', r'$X$', r'$v, v_r$', r'$Z$' # Use TeX character with r''
     if fsize == 0:
         figs = 1.
         fs1, lw1, ms1 = 1., 1.2, 6.
         tck_s1, alw = 3, 0.625
         ctxt1 = 'paper'
         lpad = [5, 5] # Space between tick label and label
-        tpad = [3, 5] # Space between axis and tick label
+        tpad = [5, 5] # Space between axis and tick label
     else:
         figs = 2.
         fs1, lw1, ms1 = 1.5, 3., 14.
@@ -89,6 +109,19 @@ def sns_set(fs, tck_s, alw, ctxt):
         }
     )
 
+def set_ticks_digit(arr_in):
+    lis_out = [0]*arr_in.size
+    for i in range(arr_in.size):
+        j = 0
+        lis_out[i] = r'$%d'%(np.sign(arr_in[i])*(abs(arr_in[i]) + 1.0e-6))
+        while (arr_in[i] + 1.0e-8) % 10.0**j > 1.0e-6:
+            if j == 0:
+                lis_out[i] = lis_out[i] + r'.'
+            lis_out[i] = lis_out[i] + r'%d'%( ( arr_in[i] % 10.0**(j) )*10.0**(-j + 1) + 1.0e-6 )
+            j = j - 1
+        lis_out[i] = lis_out[i] + r'$'
+    return lis_out
+
 def plot_y():
     fig = plt.figure(figsize = (4.8*figs, 2.4*figs), dpi = 100, linewidth = 0)
     ax1 = fig.add_subplot(111)
@@ -99,20 +132,27 @@ def plot_y():
 
     ax1.set_xlabel(lt, labelpad = lpad[0]) # Axis label
     ax1.set_ylabel(ly, labelpad = lpad[1])
-    xm = [0.0, tmax]
+    xm = [tmin, tmax]
     ax1.set_xlim(xm[0], xm[1]) # Range of axis
+    ax1.set_ylim(-4, 4)
     ax1.tick_params(axis = 'x', pad = tpad[0])
     ax1.tick_params(axis = 'y', pad = tpad[1])
 
-    ax1.plot(t_plt1, xyz_plt1[1], lw = lw1, ls = 'solid', color = 'C0', alpha = 1.0, clip_on = False, zorder = 8, label = r'$Y(t=0)=%8.5f$'%xyz_plt1[1, 0])
+    ax1.plot(t_plt1, xyz_plt1[1], lw = lw1, ls = 'solid', color = 'C0', alpha = 1.0, clip_on = False, zorder = 8, label = r'$v(t=30)=%6.3f$'%xyz_plt1[1, 0])
 
-    ax1.plot(t_plt2, xyz_plt2[1], lw = lw1, ls = 'solid', color = 'C1', alpha = 0.8, clip_on = False, zorder = 8, label = r'$Y(t=0)=%8.5f$'%xyz_plt2[1, 0])
+    ax1.plot(t_plt2, xyz_plt2[1], lw = lw1*1.5, ls = 'solid', color = 'C1', alpha = 0.7, clip_on = False, zorder = 8, label = r'$v_r(t=30)=%6.3f$'%xyz_plt2[1, 0])
+
+    ax1.scatter(t_plt1[0], xyz_plt1[1, 0], marker = 'o', s = 40, c = 'C0', clip_on = False, zorder = 10)
+    ax1.scatter(t_plt2[0], xyz_plt2[1, 0], marker = 'o', s = 40, c = 'C1', clip_on = False, zorder = 10)
+
+    ax1.set_xticks(ax1.get_xticks(), set_ticks_digit(ax1.get_xticks()))
+    ax1.set_yticks(ax1.get_yticks(), set_ticks_digit(ax1.get_yticks()))
 
     ### Legend
     h1, l1 = ax1.get_legend_handles_labels()
     ax1.legend(h1, l1, bbox_to_anchor = (1.0, 1.0), loc = "upper left", framealpha = 1.0, fancybox=False, edgecolor = "black").get_frame().set_linewidth(alw*0.8)
     ## Save file
-    fig.savefig(plotdir + "lorenz_y" + ext, bbox_inches = "tight")
+    fig.savefig(plotdir + "lorenz_sync" + ext, bbox_inches = "tight")
 
 def plot_xyz():
     fig = plt.figure(figsize = (3.6*figs, 2.4*figs), dpi = 100, linewidth = 0)
@@ -136,10 +176,11 @@ if __name__ == '__main__':
     print("start main")
     print("plotdir: ", plotdir, ", ctxt: ", ctxt1)
     print('ntmax, n_p: ', int((tmax + 1.0e-8)/dt), int((tmax + 1.0e-8)/dt_plt))
+    print('tmin: ', tmin, ', x0, y0, z0: ', np.round(xyz_plt1[:, 0], 4))
     sns_set(fs1, tck_s1, alw, ctxt1)
 
     plot_y()
-    plot_xyz()
+    # plot_xyz()
 
     if fshow == 1:
         plt.show()
